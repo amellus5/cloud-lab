@@ -6,40 +6,122 @@ function App() {
   const [studentId, setStudentId] = useState("");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-const handleSubmit = async (e) => {
-  e.preventDefault();
 
-  try {
-    const response = await fetch("/api/students", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        studentId,
-        name,
-        email,
-      }),
-    });
+  // =========================
+  // THÊM SINH VIÊN - POST
+  // =========================
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-    const newStudent = await response.json();
+    try {
+      const response = await fetch("/api/students", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          studentId,
+          name,
+          email,
+        }),
+      });
 
-    setStudents([...students, newStudent]);
+      const newStudent = await response.json();
 
-    setStudentId("");
-    setName("");
-    setEmail("");
-  } catch (error) {
-    console.error("Error:", error);
-  }
-};
+      setStudents((prevStudents) => [
+        ...prevStudents,
+        newStudent,
+      ]);
+
+      setStudentId("");
+      setName("");
+      setEmail("");
+    } catch (error) {
+      console.error("Lỗi thêm sinh viên:", error);
+    }
+  };
+
+  // =========================
+  // CẬP NHẬT SINH VIÊN - PUT
+  // =========================
+  const handleUpdate = async (id) => {
+    const newName = prompt("Nhập họ tên mới:");
+    const newEmail = prompt("Nhập email mới:");
+
+    if (!newName || !newEmail) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/students/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: newName,
+          email: newEmail,
+        }),
+      });
+
+      const updatedStudent = await response.json();
+
+      setStudents((prevStudents) =>
+        prevStudents.map((student) =>
+          student._id === id ? updatedStudent : student
+        )
+      );
+    } catch (error) {
+      console.error("Lỗi cập nhật sinh viên:", error);
+    }
+  };
+
+  // =========================
+  // XÓA SINH VIÊN - DELETE
+  // =========================
+  const handleDelete = async (id) => {
+    const confirmDelete = window.confirm(
+      "Bạn có chắc muốn xóa sinh viên này không?"
+    );
+
+    if (!confirmDelete) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/students/${id}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        throw new Error("Xóa sinh viên thất bại");
+      }
+
+      setStudents((prevStudents) =>
+        prevStudents.filter((student) => student._id !== id)
+      );
+    } catch (error) {
+      console.error("Lỗi xóa sinh viên:", error);
+    }
+  };
+
+  // =========================
+  // LẤY DANH SÁCH - GET
+  // =========================
   useEffect(() => {
     fetch("/api/students")
       .then((response) => response.json())
-      .then((data) => setStudents(data))
-      .catch((error) => console.error("Error:", error));
+      .then((data) => {
+        setStudents(data);
+      })
+      .catch((error) => {
+        console.error("Lỗi lấy danh sách:", error);
+      });
   }, []);
 
+  // =========================
+  // GIAO DIỆN
+  // =========================
   return (
     <div>
       <h1>Danh sách sinh viên</h1>
@@ -68,7 +150,9 @@ const handleSubmit = async (e) => {
           onChange={(e) => setEmail(e.target.value)}
         />
 
-        <button type="submit">Thêm sinh viên</button>
+        <button type="submit">
+          Thêm sinh viên
+        </button>
       </form>
 
       <h2>Danh sách</h2>
@@ -77,6 +161,24 @@ const handleSubmit = async (e) => {
         {students.map((student) => (
           <li key={student._id}>
             {student.studentId} - {student.name} - {student.email}
+
+            {" "}
+
+            <button
+              type="button"
+              onClick={() => handleUpdate(student._id)}
+            >
+              Sửa
+            </button>
+
+            {" "}
+
+            <button
+              type="button"
+              onClick={() => handleDelete(student._id)}
+            >
+              Xóa
+            </button>
           </li>
         ))}
       </ul>
