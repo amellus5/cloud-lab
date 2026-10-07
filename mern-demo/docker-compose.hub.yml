@@ -1,0 +1,14 @@
+services:
+  backend:
+    image: amellus5/mern-backend:1.0
+    dns:
+      - 8.8.8.8
+    ports:
+      - "5000:5000"
+    env_file:
+      - .env
+
+  frontend:
+    image: amellus5/mern-frontend:1.0
+    ports:
+      - "5173:5173"
